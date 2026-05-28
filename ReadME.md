@@ -80,7 +80,7 @@ sudo nano /etc/ssh/sshd_config
 -sudo daemon-reload
 -sudo systemctl restart ssh
 
-2. Node exporter
+3. Node exporter
 
 download: 
 -wget https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz
@@ -98,15 +98,51 @@ to check metrics: curl http://localhost:9100/metrics
 
 to add ufw rules: sudo ufw allow proto tcp from IP to any port 9100  
 
-3. rsyslog
+4. rsyslog
 
 Download: sudo apt install rsyslog
 
 -sudo systemctl enable rsyslog
 
-4. Fail2ban
+5. Fail2ban
 
-5. Promtail
+Download: wget https://github.com/fail2ban/fail2ban/archive/refs/tags/1.1.0.tar.gz
+
+-tar -xvf 1.1.0.tar.gz
+-cd fail2ban-1.1.0
+
+-sudo mkdir -p /etc/fail2ban
+-sudo mkdir -p /var/log/fail2ban
+
+-sudo nano /etc/fail2ban/jail.local
+
+To set as a serice: sudo nano /etc/systemd/system/fail2ban.service
+
+-sudo systemctl daemon-reload
+-sudo systemctl enable fail2ban
+-sudo systemctl start fail2ban
+
+To check jail status: sudo fail2ban-client status
+
+6. Fail2ban exporter
+
+Download: wget https://github.com/prometheus-community/fail2ban_exporter/releases/latest/download/fail2ban_exporter-linux-amd64.tar.gz
+
+-tar -xvf fail2ban_exporter-linux-amd64.tar.gz
+-cd fail2ban_exporter-linux-amd64
+
+-sudo cp fail2ban_exporter /usr/local/bin/
+-sudo useradd --no-create-home --shell /bin/false fail2ban_exporter
+
+To set as a service: sudo nano /etc/systemd/system/fail2ban_exporter.service
+
+-sudo systemctl daemon-reload
+-sudo systemctl enable fail2ban_exporter
+-sudo systemctl start fail2ban_exporter
+
+To check metrics: curl localhost:9191/metrics
+
+7. Promtail
 
 Download: wget https://github.com/grafana/loki/releases/latest/download/promtail-linux-amd64.zip
 
@@ -121,7 +157,7 @@ To install as a service: sudo nano /etc/systemd/system/promtail.service
 -sudo systemctl daemon-reload
 -sudo systemctl start promtail
 
-6. Tailscale
+7. Tailscale
 
 Download: curl -fsSL https://tailscale.com/install.sh | sh
 

@@ -1,0 +1,17 @@
+
+[Unit]
+Description=Fail2Ban Prometheus Exporter
+After=network.target fail2ban.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/fail2ban_exporter \
+  --collector.f2b.socket=/var/run/fail2ban/fail2ban.sock \
+  --web.listen-address=:9191
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

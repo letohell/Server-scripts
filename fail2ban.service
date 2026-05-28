@@ -1,0 +1,12 @@
+[Unit]
+Description=Fail2Ban Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/fail2ban-server -xf start
+ExecStop=/usr/local/bin/fail2ban-client stop
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

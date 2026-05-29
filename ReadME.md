@@ -140,7 +140,7 @@ To set as a service: sudo nano /etc/systemd/system/fail2ban_exporter.service
 -sudo systemctl enable fail2ban_exporter
 -sudo systemctl start fail2ban_exporter
 
-To check metrics: curl localhost:9191/metrics
+To check metrics: curl localhost:9191/metrics 
 
 7. Promtail
 
@@ -165,3 +165,24 @@ Download: curl -fsSL https://tailscale.com/install.sh | sh
 
 Login in account and connect server machine/ 
 Now yout localhost and server are in one network.
+
+________________________________________________
+Run install-monitoring-windows.ps1
+
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\install-monitoring-windows.ps1
+
+After installing
+
+curl http://localhost:9090
+curl http://localhost:3100/ready
+curl http://localhost:3000
+
+________________________________________________
+
+Run ubuntu-agent.sh
+
+chmod +x install-localhost.sh install-ubuntu-agent.sh
+
+sudo ./install-localhost.sh
+sudo ./install-ubuntu-agent.sh http://TAILSCALE_IP_ЛОКАЛХОСТА:3100/loki/api/v1/push

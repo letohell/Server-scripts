@@ -8,7 +8,7 @@ $DownloadDir = "$BaseDir\downloads"
 
 New-Item -ItemType Directory -Force -Path $BaseDir, $PromDir, $LokiDir, $NssmDir, $DownloadDir | Out-Null
 
-function Download-GitHubAsset {
+function Get-GitHubAsset {
     param (
         [string]$Repo,
         [string]$Pattern,
@@ -39,7 +39,7 @@ Copy-Item "$DownloadDir\nssm-2.24\win64\nssm.exe" "$NssmDir\nssm.exe" -Force
 
 Write-Host "Downloading Prometheus..."
 $promZip = "$DownloadDir\prometheus.zip"
-Download-GitHubAsset "prometheus/prometheus" "windows-amd64\.zip$" $promZip
+Get-GitHubAsset "prometheus/prometheus" "windows-amd64\.zip$" $promZip
 Expand-Archive $promZip -DestinationPath $DownloadDir -Force
 $promExtracted = Get-ChildItem $DownloadDir -Directory | Where-Object { $_.Name -like "prometheus-*.windows-amd64" } | Select-Object -First 1
 Copy-Item "$($promExtracted.FullName)\*" $PromDir -Recurse -Force
@@ -62,7 +62,7 @@ Write-Host "Installing Prometheus service..."
 
 Write-Host "Downloading Loki..."
 $lokiZip = "$DownloadDir\loki.zip"
-Download-GitHubAsset "grafana/loki" "^loki-windows-amd64\.exe\.zip$" $lokiZip
+Get-GitHubAsset "grafana/loki" "^loki-windows-amd64\.exe\.zip$" $lokiZip
 Expand-Archive $lokiZip -DestinationPath $LokiDir -Force
 
 @"

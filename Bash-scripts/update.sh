@@ -1,11 +1,116 @@
-sudo wget https://github.com/grafana/loki/releases/v3.6.8/download/promtail-linux-amd64.zip
-unzip -o promtail-linux-amd64.zip
-chmod +x promtail-linux-amd64
-sudo mv promtail-linux-amd64 /usr/local/bin/promtail
+#!/bin/bash
+set -e
 
-sudo mkdir -p /var/lib/promtail
+NODE_EXPORTER_VERSION="1.11.1"
 
-sudo tee /etc/promtail-config.yaml > /dev/null <<EOF
+sudo apt update
+sudo apt upgrade
+
+sudo ufw enable
+
+sudo apt install openssh-server
+sudo systemctl enable ssh
+sudo ufw allow ssh
+
+sudo ufw allow 9100/tcp #node_exporter
+sudo ufw allow 9191/tcp #fail2ban
+sudo ufw allow 3100/tcp #promtail
+
+#rsyslog
+sudo apt install rsyslog
+sudo systemctl enable rsyslog
+sudo systemctl start rsyslog
+
+#node_exporter
+cd /tmp
+wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+tar xvf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+sudo cp node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+
+sudo mkdir -p /var/lib/node_exporter/textfile_collector
+
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<EOF
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/node_exporter \
+  --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo sytemctl enable node_exporter
+sudo systemctl restart node_exporter
+
+#fail2ban
+sudo apt install fail2ban geoip-bin
+sudo tee /etc/system/systemd/fail2ban.service > /dev/null <<EOF
+[Unit]
+Description=Fail2Ban Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/fail2ban-server -xf start
+ExecStop=/usr/local/bin/fail2ban-client stop
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo tee /etc/fail2ban/jail.local > /dev/null <<EOF
+[sshd]
+enabled = true
+maxretry = 6
+findtime = 1h
+bantime = 8h
+ignoreip = YOUR_IPs
+action = ufw
+EOF
+
+sudo sytemctl enable fail2ban
+sudo systemctl restart fail2ban
+
+#tailscale
+curl -fsSL https://tailscale.com/install.sh | sh  
+#sudo tailscale up
+
+#docker
+sudo apt install docker-compose
+sudo mkdir -p /opt/monitoring-agent/promtail
+cd /opt/monitoring-agent
+
+sudo tee docker-compose.yml > /dev/null <<EOF
+services:
+  promtail:
+    image: grafana/promtail:3.6.11
+    container_name: promtail
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/promtail:/var/lib/promtail
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+
+  fail2ban_exporter:
+    image: blackflysolutions/fail2ban-prometheus-exporter:latest
+    container_name: fail2ban_exporter
+    ports:
+      - "9191:9191"
+    volumes:
+      - /var/run/fail2ban:/var/run/fail2ban:ro
+    command:
+      - "--collector.f2b.socket=/var/run/fail2ban/fail2ban.sock"
+      - "--web.listen-address=:9191"
+    restart: unless-stopped
+EOF
+
+sudo tee promtail/promtail-config.yaml > /dev/null <<EOF
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
@@ -14,7 +119,7 @@ positions:
   filename: /var/lib/promtail/positions.yaml
 
 clients:
-  - url: ${LOKI_URL}
+  - url: http://TAILSCALE_IP_WINDOWS:3100/loki/api/v1/push
 
 scrape_configs:
   - job_name: authlog
@@ -36,29 +141,11 @@ scrape_configs:
           __path__: /var/log/syslog
 EOF
 
-sudo tee /etc/systemd/system/promtail.service > /dev/null <<EOF
-[Unit]
-Description=Promtail
-After=network.target
+sudo mkdir -p /var/lib/promtail
+sudo docker compose up -d
 
-[Service]
-ExecStart=/usr/local/bin/promtail -config.file=/etc/promtail-config.yaml
-Restart=always
 
-[Install]
-WantedBy=multi-user.target
-EOF
 
-wget https://github.com/hctrdev/fail2ban-prometheus-exporter/releases/download/v${FAIL2BAN_EXPORTER_VERSION}/fail2ban-prometheus-exporter_${FAIL2BAN_EXPORTER_VERSION}_linux_amd64.tar.gz || true
-echo "Fail2Ban exporter release name may differ. Check: https://github.com/hctrdev/fail2ban-prometheus-exporter/releases"
 
-sudo systemctl daemon-reload
-sudo systemctl enable --now node_exporter
-sudo systemctl enable --now promtail
 
-echo "Done."
-echo "Node exporter: http://localhost:9100/metrics"
-echo "Promtail config: /etc/promtail-config.yaml"
-echo "Run: sudo tailscale up"
-echo "Use script argument for Loki URL, example:"
-echo "sudo ./install-ubuntu-agent.sh http://100.x.x.x:3100/loki/api/v1/push"
+

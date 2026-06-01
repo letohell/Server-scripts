@@ -48,7 +48,7 @@ sudo systemctl restart node_exporter
 
 #fail2ban
 sudo apt install fail2ban geoip-bin
-sudo tee /etc/system/systemd/fail2ban.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/fail2ban.service > /dev/null <<EOF
 [Unit]
 Description=Fail2Ban Service
 After=network.target

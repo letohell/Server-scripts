@@ -145,6 +145,7 @@ To check metrics: curl localhost:9191/metrics
 7. Promtail
 
 Download: wget https://github.com/grafana/loki/releases/latest/download/promtail-linux-amd64.zip
+https://github.com/grafana/loki/releases/download/v3.7.2/logcli-linux-amd64.zip
 
 -unzip promtail-linux-amd64.zip
 -chmod +x promtail-linux-amd64

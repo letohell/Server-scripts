@@ -43,7 +43,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-sudo sytemctl enable node_exporter
+sudo systemctl enable node_exporter
 sudo systemctl restart node_exporter
 
 #fail2ban

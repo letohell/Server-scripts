@@ -73,7 +73,7 @@ ignoreip = YOUR_IPs
 action = ufw
 EOF
 
-sudo sytemctl enable fail2ban
+sudo systemctl enable fail2ban
 sudo systemctl restart fail2ban
 
 #tailscale

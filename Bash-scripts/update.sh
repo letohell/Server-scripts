@@ -11,6 +11,7 @@ sudo ufw enable
 sudo apt install openssh-server
 sudo systemctl enable ssh
 sudo ufw allow ssh
+sudo systemctl start ssh
 
 sudo ufw allow 9100/tcp #node_exporter
 sudo ufw allow 9191/tcp #fail2ban
@@ -48,20 +49,6 @@ sudo systemctl restart node_exporter
 
 #fail2ban
 sudo apt install fail2ban geoip-bin
-sudo tee /etc/systemd/system/fail2ban.service > /dev/null <<EOF
-[Unit]
-Description=Fail2Ban Service
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/fail2ban-server -xf start
-ExecStop=/usr/local/bin/fail2ban-client stop
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
 
 sudo tee /etc/fail2ban/jail.local > /dev/null <<EOF
 [sshd]
@@ -69,8 +56,7 @@ enabled = true
 maxretry = 6
 findtime = 1h
 bantime = 8h
-ignoreip = YOUR_IPs
-action = ufw
+ignoreip = 192.168.88.156
 EOF
 
 sudo systemctl enable fail2ban
@@ -81,7 +67,8 @@ curl -fsSL https://tailscale.com/install.sh | sh
 #sudo tailscale up
 
 #docker
-sudo apt install docker-compose
+sudo apt install docker.io docker-compose-plugin
+sudo systemctl enable --now docker
 sudo mkdir -p /opt/monitoring-agent/promtail
 cd /opt/monitoring-agent
 

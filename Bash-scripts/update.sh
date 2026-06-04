@@ -4,11 +4,9 @@ set -e
 NODE_EXPORTER_VERSION="1.11.1"
 
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y
 
-sudo ufw enable
-
-sudo apt install openssh-server
+sudo apt install openssh-server -y
 sudo systemctl enable ssh
 sudo ufw allow ssh
 sudo systemctl start ssh
@@ -16,9 +14,10 @@ sudo systemctl start ssh
 sudo ufw allow 9100/tcp #node_exporter
 sudo ufw allow 9191/tcp #fail2ban
 sudo ufw allow 3100/tcp #promtail
+sudo ufw enable
 
 #rsyslog
-sudo apt install rsyslog
+sudo apt install rsyslog -y
 sudo systemctl enable rsyslog
 sudo systemctl start rsyslog
 
@@ -48,9 +47,11 @@ sudo systemctl enable node_exporter
 sudo systemctl restart node_exporter
 
 #fail2ban
-sudo apt install fail2ban geoip-bin
+sudo apt install fail2ban geoip-bin -y
 
 sudo tee /etc/fail2ban/jail.local > /dev/null <<EOF
+[DEFAULTS]
+ignoreip =
 [sshd]
 enabled = true
 maxretry = 6
@@ -67,7 +68,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
 #sudo tailscale up
 
 #docker
-sudo apt install docker.io docker-compose
+sudo apt install docker.io docker-compose -y
 sudo systemctl enable --now docker
 sudo mkdir -p /opt/monitoring-agent/promtail
 cd /opt/monitoring-agent

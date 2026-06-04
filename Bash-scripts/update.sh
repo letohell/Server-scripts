@@ -56,7 +56,7 @@ enabled = true
 maxretry = 6
 findtime = 1h
 bantime = 8h
-ignoreip = 192.168.88.156
+ignoreip = 
 EOF
 
 sudo systemctl enable fail2ban
@@ -67,7 +67,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
 #sudo tailscale up
 
 #docker
-sudo apt install docker.io docker-compose-plugin
+sudo apt install docker.io docker-compose
 sudo systemctl enable --now docker
 sudo mkdir -p /opt/monitoring-agent/promtail
 cd /opt/monitoring-agent
@@ -129,7 +129,7 @@ scrape_configs:
 EOF
 
 sudo mkdir -p /var/lib/promtail
-sudo docker compose up -d
+sudo docker-compose up -d
 
 
 

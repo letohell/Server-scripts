@@ -56,7 +56,7 @@ enabled = true
 maxretry = 6
 findtime = 1h
 bantime = 8h
-ignoreip = 192.168.88.156
+ignoreip = 
 EOF
 
 sudo systemctl enable fail2ban
